@@ -25,12 +25,12 @@ $all       = !empty($_REQUEST['all']);
 $repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = !strcasecmp($_GET["f"], 'csv');
-
+/*
 if ($all && $days > 7 && !strlen(trim($filterstr))) {
   header('HTTP/1.0 403 Forbidden');
   exit;
 }
-
+*/
 if (isset($this_user) && !isset($user))
   $user = $this_user;
 
@@ -46,10 +46,10 @@ if(extension_loaded('newrelic')) {
 
 $includeip      = false;
 $includePrivate = false;
-if ($admin) {
+//if ($admin) {
     $includeip = (int)$_GET["ip"] == 1;
     $includePrivate = (int)$_GET["private"] == 1;
-}
+//}
 
 function check_it($val) {
     if ($val) {

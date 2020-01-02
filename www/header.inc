@@ -95,7 +95,7 @@ if (!defined('EMBED')) {
             }
 
             if (empty($settings['disableTestlog'])) {
-              $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+              $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/30/' : '/testlog.php?days=30';
             }
 
             if (is_dir('wptmonitor')) {
@@ -317,7 +317,8 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         if( !isset($test['testinfo']) || !isset($test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
             $tabs['Screenshot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
-
+	
+	$tabs['Request Map'] = "https://requestmap.herokuapp.com/render.php?server=wpt.webperf.tools&id=$id";
         foreach( $tabs as $tabName => $tabUrl )
         {
             // make sure we have a test result to navigate to

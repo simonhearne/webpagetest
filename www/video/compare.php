@@ -86,8 +86,8 @@ else
             ?>
             <style type="text/css">
             <?php
-                $bgcolor = '000000';
-                $color = 'ffffff';
+                $bgcolor = 'fff';
+                $color = '000';
                 if (array_key_exists('bg', $_GET)) {
                     $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
@@ -171,7 +171,7 @@ else
                     ?>
                     word-wrap: break-word;
                 }
-                .thumb{ border: none; }
+                .thumb{ border: 2px solid #0005; }
                 .thumbChanged{border: 3px solid #FEB301;}
                 .thumbAFT{border: 3px solid #FF0000;}
                 #createForm
