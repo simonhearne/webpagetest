@@ -164,6 +164,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
     $include_js = (bool)@$options['include_js'];
+    $include_wait = (bool)@$options['include_wait'];
     $show_chunks = !isset($options['show_chunks']) || (bool)@$options['show_chunks'];
 
     $top = 0;
@@ -840,7 +841,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                       $is_thumbnail, $is_mime, $is_state, $request['url']);
                   $bars = GetBars($request, $x_scaler, $y1, $y2,
                                   $is_thumbnail, $is_mime, $is_state, $include_js,
-                                  $max_bw, $pass, $show_chunks);
+                                  $max_bw, $pass, $show_chunks, $include_wait);
                   foreach ($bars as $bar) {
                       list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
                       DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
@@ -874,6 +875,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         if ($include_js)
           $mime_count++;
         $bar_labels = array('dns', 'connect', 'ssl');
+        if ($include_wait) {
+          array_unshift($bar_labels, 'wait');
+        }
         $mime_count += count($bar_labels);
         $bar_width = $width / $mime_count;
         $x = 0;
@@ -1226,7 +1230,7 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 */
 function GetBars($request, $x_scaler, $y1, $y2,
                  $is_thumbnail, $is_mime, $is_state, $include_js,
-                 $max_bw, $pass, $show_chunks) {
+                 $max_bw, $pass, $show_chunks, $include_wait) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1292,6 +1296,9 @@ function GetBars($request, $x_scaler, $y1, $y2,
     if ($pass == 1) {
       AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
     }
+  }
+  if ($include_wait) {
+    AddBarIfValid($bars, 'wait', 'created', 'ttfb_start', $request, $x_scaler, $state_y1, $state_y2);
   }
   AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
@@ -1406,7 +1413,8 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <span id="request-details-button$stepSuffix"><input type="radio" id="radio1$stepSuffix" value="request-details$stepSuffix" name="radio" checked="checked" /><label for="radio1$stepSuffix">Details</label></span>
                 <span id="request-headers-button$stepSuffix"><input type="radio" id="radio2$stepSuffix" value="request-headers$stepSuffix" name="radio" /><label for="radio2$stepSuffix">Request</label></span>
                 <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
-                <span id="response-body-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Object</label></span>
+                <span id="request-raw-details-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="request-raw-details$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Raw Details</label></span>
+                <span id="response-body-button$stepSuffix"><input type="radio" id="radio5$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio5$stepSuffix">Object</label></span>
             </div>
         </div>
         <div class="jqmdBC">
@@ -1414,6 +1422,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
                 <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
                 <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
                 <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
+                <div id="request-raw-details$stepSuffix" class="dialog-tab-content request-raw-details"><pre id="request-raw-details-json$stepSuffix"></pre></div>
                 <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
             </div>
         </div>

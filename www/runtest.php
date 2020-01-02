@@ -202,7 +202,9 @@
             if (isset($req_pingback))
               $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback))
-                $test['callback'] = $req_callback;
+              $test['callback'] = $req_callback;
+            if(!isset($test['callback']) && GetSetting('ping_back_url'))
+              $test['callback'] = GetSetting('ping_back_url');
             if (isset($req_agent))
               $test['agent'] = $req_agent;
             if (isset($req_tcpdump))
@@ -210,6 +212,7 @@
             if (isset($req_lighthouse))
               $test['lighthouse'] = $req_lighthouse;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
+            $test['lighthouseScreenshots'] = isset($_REQUEST['lighthouseScreenshots']) && $_REQUEST['lighthouseScreenshots'] ? 1 : 0;
             $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
             $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : GetSetting('heroElementTimes', 0);
             if (isset($req_timeline))
@@ -2241,6 +2244,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'lighthouse', '1');
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 AddIniLine($testFile, 'lighthouseTrace', '1');
+            if( isset($test['lighthouseScreenshots']) && $test['lighthouseScreenshots'] )
+                AddIniLine($testFile, 'lighthouseScreenshots', '1');
             if( isset($test['v8rcs']) && $test['v8rcs'] )
                 AddIniLine($testFile, 'v8rcs', '1');
             if( isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'] )

@@ -67,7 +67,7 @@ function loadPageRunData($testPath, $run, $cached, $testInfo = null) {
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
-  $cacheVer = 9;
+  $cacheVer = 10;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile)) {
@@ -970,15 +970,27 @@ function ParseUserTiming($file) {
       }
     }
     
-    // Make a pass looking for FMP/FCP events which are only ever on the main frame
+    // Make a pass looking for explicitly tagged main frames
     $main_frames = array();
     foreach ($events as $event) {
       if (is_array($event) &&
           isset($event['name']) &&
           isset($event['args']['frame']) &&
-          strpos($event['name'], 'Paint') !== FALSE &&
           !in_array($event['args']['frame'], $main_frames)) {
-        $main_frames[] = $event['args']['frame'];
+        $is_main_frame = false;
+        if (isset($event['args']['data']['isLoadingMainFrame']) &&
+            $event['args']['data']['isLoadingMainFrame'] &&
+            isset($event['args']['data']['documentLoaderURL']) &&
+            strlen($event['args']['data']['documentLoaderURL'])) {
+          $is_main_frame = true;
+        } elseif (isset($event['args']['data']['isMainFrame']) && $event['args']['data']['isMainFrame']) {
+          $is_main_frame = true;
+        } elseif ($event['name'] == 'markAsMainFrame') {
+          $is_main_frame = true;
+        }
+        if ($is_main_frame) {
+          $main_frames[] = $event['args']['frame'];
+        }
       }
     }
     // Find the first navigation to determine which is the main frame
@@ -1001,33 +1013,29 @@ function ParseUserTiming($file) {
     }
     if (count($main_frames) && isset($start_time)) {
       foreach ($events as $event) {
-        $isMainFrame = false;
-        if (isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames))
-          $isMainFrame = true;
-        elseif (isset($event['args']['data']['inMainFrame']) && $event['args']['data']['inMainFrame'])
-          $isMainFrame = true;
         if (is_array($event) &&
             isset($event['name']) &&
             isset($event['ts']) &&
-            $event['name'] != 'navigationStart' &&
-            $isMainFrame &&
+            isset($event['args']['frame']) && in_array($event['args']['frame'], $main_frames) &&
             ($event['ts'] >= $start_time || isset($event['args']['value']))) {
           if (!isset($user_timing)) {
             $user_timing = array();
           }
           $name = $event['name'];
-          $entry = array('name' => $name);
+          $time = null;
           if (isset($event['args']['value'])) {
-            $entry['time'] = $event['args']['value'];
+            $time = $event['args']['value'];
           } else {
             $elapsed_usec = $event['ts'] - $start_time;
             $elapsed_ms = intval($elapsed_usec / 1000.0);
-            $entry['time'] = $elapsed_ms;
+            $time = $elapsed_ms;
           }
           if (isset($event['args']['data']['durationInMilliseconds'])) {
-            $entry['time'] = $event['args']['data']['durationInMilliseconds'];
+            $time = $event['args']['data']['durationInMilliseconds'];
           }
-          $user_timing[] = $entry;
+          if (isset($name) && isset($time)) {
+            $user_timing[] = array('name' => $name, 'time' => $time);
+          }
         }
       }
     }

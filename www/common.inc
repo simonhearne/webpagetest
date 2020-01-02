@@ -1,6 +1,14 @@
 <?php
 require_once('./common_lib.inc');
 require_once('./plugins.php.inc');
+require_once('./util.inc');
+
+if (isset($REDIRECT_HTTPS) && $REDIRECT_HTTPS && !isSslConnection() && GetSetting('prefer_https')) {
+    $location = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . $location);
+    exit(0);
+}
 
 // if any query parameter includes a .., exit right away - likely a hack attempt
 foreach($_REQUEST as $key => $val) {
@@ -81,7 +89,7 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 $userIsBot = false;
 if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
     strlen($_SERVER['HTTP_USER_AGENT']) &&
-    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
+    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|BlockBit|Wget|Google-Apps-Script|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
   $userIsBot = true;
 }
 
@@ -89,7 +97,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 define('VER_WEBPAGETEST', '19.04');   // webpagetest version
 define('VER_CSS', 74);                // version of the sitewide css file
 define('VER_JS', 33);                 // version of the sitewide javascript file
-define('VER_JS_TEST', 41);            // version of the javascript specific to the test pages
+define('VER_JS_TEST', 42);            // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
                                       // To find code that fails to check that a time
@@ -260,6 +268,9 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
 $median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
+    if(extension_loaded('newrelic')) {
+        newrelic_add_custom_parameter ('testID', $id);
+    }  
     if (@strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
         $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";

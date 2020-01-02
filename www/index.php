@@ -1,4 +1,5 @@
 <?php
+$REDIRECT_HTTPS = true;
 include 'common.inc';
 
 if (array_key_exists('bulk', $_GET)) {
@@ -99,6 +100,7 @@ $loc = ParseLocations($locations);
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             <input type="hidden" name="lighthouseTrace" value="1">
+            <input type="hidden" name="lighthouseScreenshots" value="0">
 
             <?php
             echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
@@ -189,7 +191,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
+                        <li><input type="text" name="url" id="url" inputmode="url" value="<?php echo $url; ?>" class="text large" autocorrect="off" autocapitalize="off" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -836,6 +838,10 @@ $loc = ParseLocations($locations);
             echo "var maxRuns = {$settings['maxruns']};\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
+            $maps_api_key = GetSetting('maps_api_key');
+            if ($maps_api_key) {
+                echo "var mapsApiKey = '$maps_api_key';";
+            }
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
